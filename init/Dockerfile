@@ -30,7 +30,7 @@ RUN CODENAME="bookworm" GNUPGHOME="$(mktemp -d)" && \
     echo "deb https://download.rethinkdb.com/repository/debian-$CODENAME $CODENAME main" > /etc/apt/sources.list.d/rethinkdb.list && \
     wget -qO- https://download.rethinkdb.com/repository/raw/pubkey.gpg | apt-key add - && \
     apt-get update && \
-    apt-get install rethinkdb && \
+    apt-get install -y rethinkdb && \
 	rm -rf /var/lib/apt/lists/*
 
 VOLUME ["/data"]
