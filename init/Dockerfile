@@ -31,7 +31,7 @@ RUN CODENAME=`lsb_release -cs` GNUPGHOME="$(mktemp -d)" && \
     wget -qO- https://download.rethinkdb.com/repository/raw/pubkey.gpg | sudo apt-key add - && \
     apt-get update && \
     apt-get install rethinkdb && \
-	&& rm -rf /var/lib/apt/lists/*
+	rm -rf /var/lib/apt/lists/*
 
 VOLUME ["/data"]
 
