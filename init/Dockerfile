@@ -23,12 +23,12 @@ RUN go get ./... \
 FROM debian:bookworm-slim
 
 RUN apt-get -qqy update \
-    && apt-get install -y --no-install-recommends ca-certificates gnupg2 curl \
+    && apt-get install -y --no-install-recommends ca-certificates gnupg2 wget curl \
     && rm -rf /var/lib/apt/lists/*
 
-RUN CODENAME=`lsb_release -cs` GNUPGHOME="$(mktemp -d)" && \
+RUN CODENAME="bookworm" GNUPGHOME="$(mktemp -d)" && \
     echo "deb https://download.rethinkdb.com/repository/debian-$CODENAME $CODENAME main" > /etc/apt/sources.list.d/rethinkdb.list && \
-    wget -qO- https://download.rethinkdb.com/repository/raw/pubkey.gpg | sudo apt-key add - && \
+    wget -qO- https://download.rethinkdb.com/repository/raw/pubkey.gpg | apt-key add - && \
     apt-get update && \
     apt-get install rethinkdb && \
 	rm -rf /var/lib/apt/lists/*
