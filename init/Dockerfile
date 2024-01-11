@@ -13,27 +13,40 @@
 # limitations under the License.
 
 # Versions
-ARG UPSTREAM_IMAGE=rethinkdb:2.4.1
-
-FROM golang:1.16 AS builder
+FROM golang:1.21 AS builder
 
 COPY ./rethinkdb-probe/ /go/src/rethinkdb-probe
 WORKDIR /go/src/rethinkdb-probe
 RUN go get ./... \
     && CGO_ENABLED=0 GOOS=linux go build -a -ldflags '-w -s' -o /target/rethinkdb-probe .
 
-ARG UPSTREAM_IMAGE
-ENV UPSTREAM_IMAGE=${UPSTREAM_IMAGE}
+FROM debian:bookworm-slim
 
-FROM ${UPSTREAM_IMAGE}
-MAINTAINER Pozetron Inc <hello@pozetroninc.com>
+RUN apt-get -qqy update \
+    && apt-get install -y --no-install-recommends ca-certificates gnupg2 curl \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN CODENAME=`lsb_release -cs` GNUPGHOME="$(mktemp -d)" && \
+    echo "deb https://download.rethinkdb.com/repository/debian-$CODENAME $CODENAME main" > /etc/apt/sources.list.d/rethinkdb.list && \
+    wget -qO- https://download.rethinkdb.com/repository/raw/pubkey.gpg | sudo apt-key add - && \
+    apt-get update && \
+    apt-get install rethinkdb && \
+	&& rm -rf /var/lib/apt/lists/*
+
+VOLUME ["/data"]
+
+WORKDIR /data
+
+CMD ["rethinkdb", "--bind", "all"]
+
+#   process cluster webui
+EXPOSE 28015 29015 8080
 
 RUN apt-get update && \
     apt-get install -yq curl && \
     rm -rf /var/cache/apt/* && rm -rf /var/lib/apt/lists/*
 
-ADD http://stedolan.github.io/jq/download/linux64/jq /usr/bin/jq
-RUN chmod +x /usr/bin/jq
+COPY jq /usr/bin/jq
 
 ADD https://github.com/Yelp/dumb-init/releases/download/v1.2.0/dumb-init_1.2.0_amd64 /usr/local/bin/dumb-init
 RUN chmod +x /usr/local/bin/dumb-init
